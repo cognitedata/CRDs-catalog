@@ -17,6 +17,68 @@
         "clusterVersion": {
           "type": "string"
         },
+        "discovery": {
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "filter": {
+              "type": "string"
+            },
+            "interval": {
+              "pattern": "^[0-9]+(s|m|h)$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object",
+          "additionalProperties": false
+        },
+        "downsampling": {
+          "properties": {
+            "dedupInterval": {
+              "type": "string"
+            },
+            "rules": {
+              "items": {
+                "properties": {
+                  "filter": {
+                    "type": "string"
+                  },
+                  "periods": {
+                    "items": {
+                      "properties": {
+                        "interval": {
+                          "type": "string"
+                        },
+                        "offset": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "interval",
+                        "offset"
+                      ],
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "periods"
+                ],
+                "type": "object",
+                "additionalProperties": false
+              },
+              "type": "array"
+            }
+          },
+          "type": "object",
+          "additionalProperties": false
+        },
         "imagePullSecrets": {
           "items": {
             "properties": {
@@ -117,6 +179,9 @@
         "serviceAccountName": {
           "type": "string"
         },
+        "useLegacyNaming": {
+          "type": "boolean"
+        },
         "useStrictSecurity": {
           "type": "boolean"
         },
@@ -153,6 +218,25 @@
             },
             "disableSelfServiceScrape": {
               "type": "boolean"
+            },
+            "discovery": {
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "filter": {
+                  "type": "string"
+                },
+                "interval": {
+                  "pattern": "^[0-9]+(s|m|h)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "type": "object",
+              "additionalProperties": false
             },
             "dnsConfig": {
               "items": {
@@ -195,6 +279,9 @@
             },
             "dnsPolicy": {
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -467,6 +554,10 @@
             },
             "port": {
               "type": "string"
+            },
+            "preStopSleepSeconds": {
+              "format": "int32",
+              "type": "integer"
             },
             "priorityClassName": {
               "type": "string"
@@ -799,6 +890,16 @@
                             },
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "anyOf": [
@@ -844,6 +945,58 @@
                             ],
                             "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                             "x-kubernetes-int-or-string": true
+                          },
+                          "startupBoost": {
+                            "properties": {
+                              "cpu": {
+                                "properties": {
+                                  "durationSeconds": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer"
+                                      },
+                                      {
+                                        "type": "string"
+                                      }
+                                    ],
+                                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                                    "x-kubernetes-int-or-string": true
+                                  },
+                                  "type": {
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "type": "object",
+                            "additionalProperties": false
                           }
                         },
                         "type": "object",
@@ -857,6 +1010,11 @@
                 },
                 "updatePolicy": {
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "items": {
                         "properties": {
@@ -893,6 +1051,7 @@
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
@@ -952,6 +1111,25 @@
             "disableSelfServiceScrape": {
               "type": "boolean"
             },
+            "discovery": {
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "filter": {
+                  "type": "string"
+                },
+                "interval": {
+                  "pattern": "^[0-9]+(s|m|h)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "type": "object",
+              "additionalProperties": false
+            },
             "dnsConfig": {
               "items": {
                 "x-kubernetes-preserve-unknown-fields": true
@@ -993,6 +1171,9 @@
             },
             "dnsPolicy": {
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -1259,6 +1440,10 @@
             },
             "port": {
               "type": "string"
+            },
+            "preStopSleepSeconds": {
+              "format": "int32",
+              "type": "integer"
             },
             "priorityClassName": {
               "type": "string"
@@ -1887,6 +2072,16 @@
                             },
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "anyOf": [
@@ -1932,6 +2127,58 @@
                             ],
                             "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                             "x-kubernetes-int-or-string": true
+                          },
+                          "startupBoost": {
+                            "properties": {
+                              "cpu": {
+                                "properties": {
+                                  "durationSeconds": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer"
+                                      },
+                                      {
+                                        "type": "string"
+                                      }
+                                    ],
+                                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                                    "x-kubernetes-int-or-string": true
+                                  },
+                                  "type": {
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "type": "object",
+                            "additionalProperties": false
                           }
                         },
                         "type": "object",
@@ -1945,6 +2192,11 @@
                 },
                 "updatePolicy": {
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "items": {
                         "properties": {
@@ -1981,6 +2233,7 @@
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
@@ -2076,6 +2329,9 @@
             },
             "dnsPolicy": {
               "type": "string"
+            },
+            "enableServiceLinks": {
+              "type": "boolean"
             },
             "extraArgs": {
               "additionalProperties": {
@@ -2926,6 +3182,10 @@
             "port": {
               "type": "string"
             },
+            "preStopSleepSeconds": {
+              "format": "int32",
+              "type": "integer"
+            },
             "priorityClassName": {
               "type": "string"
             },
@@ -3009,6 +3269,25 @@
               },
               "type": "object",
               "additionalProperties": false
+            },
+            "retentionFilters": {
+              "items": {
+                "properties": {
+                  "filter": {
+                    "type": "string"
+                  },
+                  "retention": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "filter",
+                  "retention"
+                ],
+                "type": "object",
+                "additionalProperties": false
+              },
+              "type": "array"
             },
             "revisionHistoryLimitCount": {
               "format": "int32",
@@ -3663,6 +3942,16 @@
                             },
                             "type": "object"
                           },
+                          "memoryAggregationIntervalCount": {
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "memoryAggregationIntervalSeconds": {
+                            "format": "int32",
+                            "minimum": 1,
+                            "type": "integer"
+                          },
                           "minAllowed": {
                             "additionalProperties": {
                               "anyOf": [
@@ -3708,6 +3997,58 @@
                             ],
                             "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                             "x-kubernetes-int-or-string": true
+                          },
+                          "startupBoost": {
+                            "properties": {
+                              "cpu": {
+                                "properties": {
+                                  "durationSeconds": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "factor": {
+                                    "format": "int32",
+                                    "type": "integer"
+                                  },
+                                  "quantity": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer"
+                                      },
+                                      {
+                                        "type": "string"
+                                      }
+                                    ],
+                                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                                    "x-kubernetes-int-or-string": true
+                                  },
+                                  "type": {
+                                    "enum": [
+                                      "Factor",
+                                      "Quantity"
+                                    ],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-validations": [
+                                  {
+                                    "message": "factor is required when type is Factor and forbidden otherwise",
+                                    "rule": "(self.type == 'Factor') == has(self.factor)"
+                                  },
+                                  {
+                                    "message": "quantity is required when type is Quantity and forbidden otherwise",
+                                    "rule": "(self.type == 'Quantity') == has(self.quantity)"
+                                  }
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "type": "object",
+                            "additionalProperties": false
                           }
                         },
                         "type": "object",
@@ -3721,6 +4062,11 @@
                 },
                 "updatePolicy": {
                   "properties": {
+                    "evictAfterOOMSeconds": {
+                      "format": "int32",
+                      "minimum": 1,
+                      "type": "integer"
+                    },
                     "evictionRequirements": {
                       "items": {
                         "properties": {
@@ -3757,6 +4103,7 @@
                         "Initial",
                         "Recreate",
                         "InPlaceOrRecreate",
+                        "InPlace",
                         "Auto"
                       ],
                       "type": "string"
