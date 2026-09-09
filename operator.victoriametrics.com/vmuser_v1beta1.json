@@ -11,6 +11,24 @@
     },
     "spec": {
       "properties": {
+        "access_log": {
+          "properties": {
+            "filters": {
+              "properties": {
+                "skip_status_codes": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object",
+              "additionalProperties": false
+            }
+          },
+          "type": "object",
+          "additionalProperties": false
+        },
         "bearerToken": {
           "type": "string"
         },
@@ -230,6 +248,9 @@
                         },
                         "namespace": {
                           "type": "string"
+                        },
+                        "useExtraService": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -240,6 +261,9 @@
                       "additionalProperties": false
                     },
                     "type": "array"
+                  },
+                  "useExtraService": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -556,6 +580,9 @@
           "type": "object",
           "x-kubernetes-map-type": "atomic",
           "additionalProperties": false
+        },
+        "useLegacyNaming": {
+          "type": "boolean"
         },
         "username": {
           "type": "string"
